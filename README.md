@@ -22,7 +22,7 @@ root filesystems (32-bit and 64-bit variants) and publishes them to Docker Hub:
 | `arm64-YYYYMMDD` | `arm64`                     | Image with the 64-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
 | `armhf-YYYYMMDD` | `arm/v6`, `arm/v7`, `arm64` | Image with the 32-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
 
-> **Note**  
+> ### Note
 > - `arm64` and `armhf` are **rolling tags** that always point to the latest
 >   available image for that variant.  
 > - `*-YYYYMMDD` tags are **immutable** and built from the official Raspberry
@@ -47,6 +47,28 @@ Or run directly:
 ```bash
 docker run --rm -it --platform linux/arm64 vascoguita/raspios:arm64
 ```
+
+> ### Note for x86_64 Hosts
+>
+> If you're running this image on an x86_64 (Intel/AMD) machine, you will need
+> to enable emulation via QEMU to run ARM containers.
+
+### Dependencies for Emulation :wrench:
+
+To run arm64 or armhf containers on x86_64 hosts, install QEMU and enable
+binfmt support using your system's package manager.
+* Debian/Ubuntu:
+  ```bash
+  sudo apt install qemu-user-static binfmt-support
+  ```
+* Fedora:
+  ```bash
+  sudo dnf install qemu-user-static binfmt-support
+  ```
+* Arch Linux:
+  ```bash
+  sudo pacman -S qemu-user-static binfmt-support
+  ```
 
 ## License :memo:
 
