@@ -6,6 +6,8 @@
 [![CodeQL](https://github.com/vascoguita/raspios-docker/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/vascoguita/raspios-docker/actions/workflows/github-code-scanning/codeql)
 [![Build](https://github.com/vascoguita/raspios-docker/actions/workflows/docker.yml/badge.svg)](https://github.com/vascoguita/raspios-docker/actions/workflows/docker.yml)
 
+![image](https://repository-images.githubusercontent.com/989342487/1cd8280d-bb4b-48e0-99c6-ed2d65f59be3)
+
 Automated multi-architecture builds of
 [Raspberry Pi OS](https://www.raspberrypi.com/software) Docker images.
 
