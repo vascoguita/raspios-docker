@@ -1,4 +1,4 @@
-FROM alpine:3.22.1 AS base
+FROM alpine:3.23.2 AS base
 
 ARG ROOTFS_URL
 ADD ${ROOTFS_URL} root.tar.xz
