@@ -24,6 +24,7 @@ COPY --from=extractor \
     --exclude=sys \
     --exclude=run \
     --exclude=var/run \
+    --exclude=boot \
     /mnt/ /
 
 CMD ["/bin/bash"]
