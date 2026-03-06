@@ -1,20 +1,17 @@
 FROM --platform=$BUILDPLATFORM debian:stable-20260223-slim AS extractor
 
-ARG RASPIOS_URL
-
-ADD ${RASPIOS_URL} raspios.img.xz
+ARG SUITE
+ARG MIRROR
+ARG ARCH
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LIBGUESTFS_BACKEND=direct
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libguestfs-tools \
-    xz-utils \
-    "linux-image-$(dpkg --print-architecture)"
+    ca-certificates \
+    debootstrap \
+    wget
 
-RUN unxz raspios.img.xz && \
-    guestfish --ro -a raspios.img -m /dev/sda2 \
-        -- set-autosync false : copy-out / /mnt/
+RUN debootstrap --arch=${ARCH} --no-check-gpg ${SUITE} /mnt ${MIRROR}
 
 FROM scratch
 

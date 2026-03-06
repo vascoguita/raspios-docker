@@ -40,7 +40,13 @@ jobs:
         include:
           - tags: ${{ vars.DOCKERHUB_USERNAME }}/raspios:arm64,${{ vars.DOCKERHUB_USERNAME }}/raspios:arm64-20251204
             platforms: linux/arm64
-            build-args: RASPIOS_URL=https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-12-04/2025-12-04-raspios-trixie-arm64-lite.img.xz
+            build-args: |
+              SUITE=trixie
+              MIRROR=http://deb.debian.org/debian
+              ARCH=arm64
           - tags: ${{ vars.DOCKERHUB_USERNAME }}/raspios:armhf,${{ vars.DOCKERHUB_USERNAME }}/raspios:armhf-20251204
             platforms: linux/arm/v6,linux/arm/v7,linux/arm64
-            build-args: RASPIOS_URL=https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-12-04/2025-12-04-raspios-trixie-armhf-lite.img.xz
+            build-args: |
+              SUITE=trixie
+              MIRROR=http://raspbian.raspberrypi.com/raspbian/
+              ARCH=armhf
