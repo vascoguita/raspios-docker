@@ -1,8 +1,9 @@
-FROM --platform=$BUILDPLATFORM debian:stable-20260223-slim AS extractor
+FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:85dfcffff3c1e193877f143d05eaba8ae7f3f95cb0a32e0bc04a448077e1ac69 AS extractor
 
 ARG RASPIOS_URL
+ARG RASPIOS_SHA256
 
-ADD ${RASPIOS_URL} raspios.img.xz
+ADD --checksum=sha256:${RASPIOS_SHA256} ${RASPIOS_URL} raspios.img.xz
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LIBGUESTFS_BACKEND=direct
@@ -14,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN unxz raspios.img.xz && \
     guestfish --ro -a raspios.img -m /dev/sda2 \
-        -- set-autosync false : copy-out / /mnt/
+    -- set-autosync false : copy-out / /mnt/
 
 FROM scratch
 
