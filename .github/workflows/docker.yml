@@ -28,19 +28,24 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Fetch checksum
+        id: fetch_checksum
+        run: echo "sha256=$(curl -sS "${{ matrix.raspios_url }}.sha256" | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           push:  ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ matrix.tags }}
           platforms: ${{ matrix.platforms }}
-          build-args: ${{ matrix.build-args }}
+          build-args: |
+            RASPIOS_URL=${{ matrix.raspios_url }}
+            RASPIOS_SHA256=${{ steps.fetch_checksum.outputs.sha256 }}
     strategy:
       matrix:
         include:
           - tags: ${{ vars.DOCKERHUB_USERNAME }}/raspios:arm64,${{ vars.DOCKERHUB_USERNAME }}/raspios:arm64-20251204
             platforms: linux/arm64
-            build-args: RASPIOS_URL=https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-12-04/2025-12-04-raspios-trixie-arm64-lite.img.xz
+            raspios_url: https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-12-04/2025-12-04-raspios-trixie-arm64-lite.img.xz
           - tags: ${{ vars.DOCKERHUB_USERNAME }}/raspios:armhf,${{ vars.DOCKERHUB_USERNAME }}/raspios:armhf-20251204
             platforms: linux/arm/v6,linux/arm/v7,linux/arm64
-            build-args: RASPIOS_URL=https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-12-04/2025-12-04-raspios-trixie-armhf-lite.img.xz
+            raspios_url: https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-12-04/2025-12-04-raspios-trixie-armhf-lite.img.xz
