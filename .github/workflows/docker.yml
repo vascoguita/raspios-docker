@@ -32,7 +32,7 @@ jobs:
         id: fetch_checksum
         run: echo "sha256=$(curl -sS "${{ matrix.raspios_url }}.sha256" | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push:  ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ matrix.tags }}
