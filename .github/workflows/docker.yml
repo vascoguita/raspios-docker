@@ -27,7 +27,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Fetch checksum
         id: fetch_checksum
         run: echo "sha256=$(curl -sS "${{ matrix.raspios_url }}.sha256" | awk '{print $1}')" >> $GITHUB_OUTPUT
