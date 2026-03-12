@@ -26,6 +26,10 @@ COPY --from=extractor \
     --exclude=run \
     --exclude=var/run \
     --exclude=boot \
+    --exclude=usr/share/doc \
+    --exclude=usr/share/man \
+    --exclude=var/lib/apt/lists \
+    --exclude=var/cache/apt \
     /mnt/ /
 
 CMD ["/bin/bash"]
