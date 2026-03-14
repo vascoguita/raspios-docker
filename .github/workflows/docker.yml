@@ -43,7 +43,10 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
-          tags: ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/raspios:{1},{0}/raspios:{1}-{2}', vars.DOCKERHUB_USERNAME, matrix.arch, steps.prep_vars.outputs.date) || format('{0}/raspios:{1}', vars.DOCKERHUB_USERNAME, matrix.arch) }}
+          tags: |
+            ${{ format('{0}/raspios:{1}', vars.DOCKERHUB_USERNAME, matrix.arch) }}
+            ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/raspios:{1}-{2}', vars.DOCKERHUB_USERNAME, matrix.arch, steps.prep_vars.outputs.date) || '' }}
+            ${{ matrix.arch == 'arm64' && format('{0}/raspios:latest', vars.DOCKERHUB_USERNAME) || '' }}
           platforms: ${{ matrix.platforms }}
           build-args: |
             RASPIOS_URL=${{ steps.prep_vars.outputs.url }}
