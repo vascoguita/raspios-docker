@@ -16,13 +16,12 @@ root filesystems (32-bit and 64-bit variants) and publishes them to Docker Hub:
 [https://hub.docker.com/r/vascoguita/raspios](https://hub.docker.com/r/vascoguita/raspios).
 
 ## Docker Images :whale:
-
-| Tag              | Architectures               | Description                                                      |
-|------------------|-----------------------------|------------------------------------------------------------------|
-| `arm64`          | `arm64`                     | Image with the latest 64-bit Raspberry Pi OS Lite release        |
-| `armhf`          | `arm/v6`, `arm/v7`, `arm64` | Image with the latest 32-bit Raspberry Pi OS Lite release        |
-| `arm64-YYYYMMDD` | `arm64`                     | Image with the 64-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
-| `armhf-YYYYMMDD` | `arm/v6`, `arm/v7`, `arm64` | Image with the 32-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
+| Tag               | Architectures               | Description                                                      |
+|-------------------|-----------------------------|------------------------------------------------------------------|
+| `latest`, `arm64` | `arm64`                     | Image with the latest 64-bit Raspberry Pi OS Lite release        |
+| `armhf`           | `arm/v6`, `arm/v7`, `arm64` | Image with the latest 32-bit Raspberry Pi OS Lite release        |
+| `arm64-YYYYMMDD`  | `arm64`                     | Image with the 64-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
+| `armhf-YYYYMMDD`  | `arm/v6`, `arm/v7`, `arm64` | Image with the 32-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
 
 > ### Note
 >
