@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:99fc6d2a0882fcbcdc452948d2d54eab91faafc7db037df82425edcdcf950e1f AS extractor
+FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:e51bfcd2226c480a5416730e0fa2c40df28b0da5ff562fc465202feeef2f1116 AS extractor
 
 ARG RASPIOS_URL
 ARG RASPIOS_SHA256
