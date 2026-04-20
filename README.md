@@ -11,28 +11,38 @@
 Automated multi-architecture builds of
 [Raspberry Pi OS](https://www.raspberrypi.com/software) Docker images.
 
-This project builds container images based on official Raspberry Pi OS *Lite*
-root filesystems (32-bit and 64-bit variants) and publishes them to Docker Hub:
+This project automatically checks for new Raspberry Pi OS *Lite* releases every
+Monday, builds multi-architecture container images from the official root
+filesystems (32-bit and 64-bit variants), and publishes them to Docker Hub:
 [https://hub.docker.com/r/vascoguita/raspios](https://hub.docker.com/r/vascoguita/raspios).
 
 ## Docker Images :whale:
-| Tag               | Architectures               | Description                                                      |
-|-------------------|-----------------------------|------------------------------------------------------------------|
-| `latest`, `arm64` | `arm64`                     | Image with the latest 64-bit Raspberry Pi OS Lite release        |
-| `armhf`           | `arm/v6`, `arm/v7`, `arm64` | Image with the latest 32-bit Raspberry Pi OS Lite release        |
-| `arm64-YYYYMMDD`  | `arm64`                     | Image with the 64-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
-| `armhf-YYYYMMDD`  | `arm/v6`, `arm/v7`, `arm64` | Image with the 32-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
+
+| Tag                       | Architectures               | Description                                                              |
+|---------------------------|-----------------------------|--------------------------------------------------------------------------|
+| `latest`, `arm64`         | `arm64`                     | Latest 64-bit release                                                    |
+| `armhf`                   | `arm/v6`, `arm/v7`, `arm64` | Latest 32-bit release                                                    |
+| `<suite>`, `arm64-<suite>`| `arm64`                     | Latest 64-bit release for the given Debian suite (e.g. `bookworm`, `arm64-bookworm`) |
+| `armhf-<suite>`           | `arm/v6`, `arm/v7`, `arm64` | Latest 32-bit release for the given Debian suite (e.g. `armhf-bookworm`) |
+| `arm64-<suite>-YYYY-MM-DD`| `arm64`                     | Specific 64-bit release by date                                          |
+| `armhf-<suite>-YYYY-MM-DD`| `arm/v6`, `arm/v7`, `arm64` | Specific 32-bit release by date                                          |
 
 > ### Note
 >
-> - `arm64` and `armhf` are **rolling tags** that always point to the latest
->   available image for that variant.  
-> - `*-YYYYMMDD` tags are **immutable** and built from the official Raspberry
->   Pi OS Lite root filesystems published on that specific date. These will
->   **never change**, ensuring reproducibility.
+> - `latest`, `arm64`, `armhf`, `<suite>`, `arm64-<suite>`, and `armhf-<suite>`
+>   are **rolling tags** that always point to the most recent release for that
+>   variant or suite.
+> - `*-YYYY-MM-DD` tags are **immutable** and will **never change**, ensuring
+>   full reproducibility.
 
 View on Docker Hub:
 [https://hub.docker.com/r/vascoguita/raspios](https://hub.docker.com/r/vascoguita/raspios)
+
+## Automation :robot:
+
+A GitHub Actions workflow runs every **Monday at 08:00 UTC** to detect new
+Raspberry Pi OS releases. For each new release that has not yet been published
+to Docker Hub, it builds and pushes the corresponding image automatically.
 
 ## Usage :bulb:
 
