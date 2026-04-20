@@ -36,7 +36,6 @@ jobs:
         env:
           URL: https://downloads.raspberrypi.com/raspios_lite_${{ matrix.arch }}/images/raspios_lite_${{ matrix.arch }}-${{ env.DATE }}/${{ env.DATE }}-raspios-${{ env.SUITE }}-${{ matrix.arch }}-lite.img.xz
         run: |
-          echo "sha256=$(curl -sS "${URL}.sha256" | awk '{print $1}')" >> $GITHUB_OUTPUT
           echo "url=${URL}" >> $GITHUB_OUTPUT
           echo "date=${DATE//-/}" >> $GITHUB_OUTPUT
       - name: Build and push
@@ -50,7 +49,6 @@ jobs:
           platforms: ${{ matrix.platforms }}
           build-args: |
             RASPIOS_URL=${{ steps.prep_vars.outputs.url }}
-            RASPIOS_SHA256=${{ steps.prep_vars.outputs.sha256 }}
     strategy:
       matrix:
         include:
