@@ -16,18 +16,19 @@ root filesystems (32-bit and 64-bit variants) and publishes them to Docker Hub:
 [https://hub.docker.com/r/vascoguita/raspios](https://hub.docker.com/r/vascoguita/raspios).
 
 ## Docker Images :whale:
-| Tag               | Architectures               | Description                                                      |
-|-------------------|-----------------------------|------------------------------------------------------------------|
-| `latest`, `arm64` | `arm64`                     | Image with the latest 64-bit Raspberry Pi OS Lite release        |
-| `armhf`           | `arm/v6`, `arm/v7`, `arm64` | Image with the latest 32-bit Raspberry Pi OS Lite release        |
-| `arm64-YYYYMMDD`  | `arm64`                     | Image with the 64-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
-| `armhf-YYYYMMDD`  | `arm/v6`, `arm/v7`, `arm64` | Image with the 32-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
+
+| Tag                | Architectures               | Description                                                      |
+|--------------------|-----------------------------|------------------------------------------------------------------|
+| `latest`, `arm64`  | `arm64`                     | Image with the latest 64-bit Raspberry Pi OS Lite release        |
+| `armhf`            | `arm/v6`, `arm/v7`, `arm64` | Image with the latest 32-bit Raspberry Pi OS Lite release        |
+| `arm64-YYYY-MM-DD` | `arm64`                     | Image with the 64-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
+| `armhf-YYYY-MM-DD` | `arm/v6`, `arm/v7`, `arm64` | Image with the 32-bit Raspberry Pi OS Lite release of YYYY-MM-DD |
 
 > ### Note
 >
 > - `arm64` and `armhf` are **rolling tags** that always point to the latest
 >   available image for that variant.  
-> - `*-YYYYMMDD` tags are **immutable** and built from the official Raspberry
+> - `*-YYYY-MM-DD` tags are **immutable** and built from the official Raspberry
 >   Pi OS Lite root filesystems published on that specific date. These will
 >   **never change**, ensuring reproducibility.
 

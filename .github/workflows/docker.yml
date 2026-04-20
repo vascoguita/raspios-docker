@@ -31,24 +31,19 @@ jobs:
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-      - name: Prepare build variables
-        id: prep_vars
-        env:
-          URL: https://downloads.raspberrypi.com/raspios_lite_${{ matrix.arch }}/images/raspios_lite_${{ matrix.arch }}-${{ env.DATE }}/${{ env.DATE }}-raspios-${{ env.SUITE }}-${{ matrix.arch }}-lite.img.xz
-        run: |
-          echo "url=${URL}" >> $GITHUB_OUTPUT
-          echo "date=${DATE//-/}" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
           push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
           tags: |
             ${{ format('{0}/raspios:{1}', vars.DOCKERHUB_USERNAME, matrix.arch) }}
-            ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/raspios:{1}-{2}', vars.DOCKERHUB_USERNAME, matrix.arch, steps.prep_vars.outputs.date) || '' }}
+            ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/raspios:{1}-{2}', vars.DOCKERHUB_USERNAME, matrix.arch, env.DATE) || '' }}
             ${{ matrix.arch == 'arm64' && format('{0}/raspios:latest', vars.DOCKERHUB_USERNAME) || '' }}
           platforms: ${{ matrix.platforms }}
           build-args: |
-            RASPIOS_URL=${{ steps.prep_vars.outputs.url }}
+            DATE=${{ env.DATE }}
+            SUITE=${{ env.SUITE }}
+            ARCH=${{ matrix.arch }}
     strategy:
       matrix:
         include:
