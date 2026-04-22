@@ -1,0 +1,78 @@
+---
+name: Docker Build and Push
+on:
+  workflow_call:
+    inputs:
+      arch:
+        required: true
+        type: string
+      date:
+        required: true
+        type: string
+      suite:
+        required: true
+        type: string
+      is_latest_arch:
+        required: true
+        type: boolean
+      is_latest_suite:
+        required: true
+        type: boolean
+      push:
+        required: true
+        type: boolean
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Tags
+        id: tags
+        run: |
+          repo="${{ vars.DOCKERHUB_USERNAME }}/raspios"
+          tags="$repo:${{ inputs.arch }}-${{ inputs.suite }}-${{ inputs.date }}"
+          if [[ "${{ inputs.is_latest_suite }}" == "true" ]]; then
+            tags="$tags,$repo:${{ inputs.arch }}-${{ inputs.suite }}"
+          fi
+          if [[ "${{ inputs.is_latest_arch }}" == "true" ]]; then
+            tags="$tags,$repo:${{ inputs.arch }}"
+          fi
+          if [[ "${{ inputs.arch }}" == "arm64" && "${{ inputs.is_latest_suite }}" == "true" ]]; then
+            tags="$tags,$repo:${{ inputs.suite }}"
+          fi
+          if [[ "${{ inputs.arch }}" == "arm64" && "${{ inputs.is_latest_arch }}" == "true" ]]; then
+            tags="$tags,$repo:latest"
+          fi
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+      - name: Set Platforms
+        id: platforms
+        run: |
+          if [[ "${{ inputs.arch }}" == "arm64" ]]; then
+            echo "platforms=linux/arm64" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ inputs.arch }}" == "armhf" ]]; then
+            echo "platforms=linux/arm/v6,linux/arm/v7,linux/arm64" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Error: Unsupported architecture '${{ inputs.arch }}'. Only 'arm64' and 'armhf' are allowed."
+            exit 1
+          fi
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Login to Docker Hub
+        if: ${{ inputs.push }}
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build and Push
+        uses: docker/build-push-action@v7
+        with:
+          push: ${{ inputs.push }}
+          tags: ${{ steps.tags.outputs.tags }}
+          platforms: ${{ steps.platforms.outputs.platforms }}
+          build-args: |
+            DATE=${{ inputs.date }}
+            SUITE=${{ inputs.suite }}
+            ARCH=${{ inputs.arch }}
