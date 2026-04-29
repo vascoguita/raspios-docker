@@ -1,17 +1,21 @@
 FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:8f0c555de6a2f9c2bda1b170b67479d11f7f5e3b66bb4a7a1d8843361c9dd3ff AS extractor
 
-ARG RASPIOS_URL
-ARG RASPIOS_SHA256
-
-ADD --checksum=sha256:${RASPIOS_SHA256} ${RASPIOS_URL} raspios.img.xz
+ARG DATE
+ARG SUITE
+ARG ARCH
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LIBGUESTFS_BACKEND=direct
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     libguestfs-tools \
     xz-utils \
     "linux-image-$(dpkg --print-architecture)"
+
+RUN URL="https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/raspios_lite_${ARCH}-${DATE}/${DATE}-raspios-${SUITE}-${ARCH}-lite.img.xz" && \
+    curl -fsSL "${URL}" -o raspios.img.xz && \
+    curl -fsSL "${URL}.sha256" | awk '{print $1 "  raspios.img.xz"}' | sha256sum -c
 
 RUN unxz raspios.img.xz && \
     guestfish --ro -a raspios.img -m /dev/sda2 \

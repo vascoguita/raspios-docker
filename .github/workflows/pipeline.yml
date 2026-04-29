@@ -1,0 +1,84 @@
+---
+name: Docker Build and Push
+on:
+  push:
+    paths:
+      - Dockerfile
+      - .github/workflows/docker.yml
+      - .github/workflows/build-push.yml
+  pull_request:
+    paths:
+      - Dockerfile
+      - .github/workflows/docker.yml
+      - .github/workflows/build-push.yml
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.discover.outputs.matrix }}
+    steps:
+      - name: Discover releases
+        id: discover
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          set -eo pipefail
+          INCLUDES=()
+          for ARCH in arm64 armhf; do
+            ALL_DATES=($(curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/" | grep -oP "(?<=href=\"raspios_lite_${ARCH}-)\d{4}-\d{2}-\d{2}(?=/)" | sort || true))
+            if [ ${#ALL_DATES[@]} -eq 0 ]; then
+              continue
+            fi
+            LATEST_ARCH_DATE="${ALL_DATES[${#ALL_DATES[@]}-1]}"
+            
+            declare -A SEEN_SUITES
+            for (( i=${#ALL_DATES[@]}-1; i>=0; i-- )); do
+              DATE="${ALL_DATES[$i]}"
+              
+              SUITE=$(curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/raspios_lite_${ARCH}-${DATE}/" | \
+                grep -oP "(?<=${DATE}-raspios-)[a-z]+(?=-${ARCH}-lite\.img\.xz)" | head -1 || true)
+              [ -z "$SUITE" ] && continue
+              
+              MISSING=false
+              if ! curl -fsSo /dev/null "https://hub.docker.com/v2/repositories/${DOCKERHUB_USERNAME}/raspios/tags/${ARCH}-${SUITE}-${DATE}/"; then
+                MISSING=true
+              fi
+              
+              IS_LATEST_SUITE=false
+              if [ -z "${SEEN_SUITES[$SUITE]}" ]; then
+                IS_LATEST_SUITE=true
+                SEEN_SUITES[$SUITE]=1
+              fi
+              
+              IS_LATEST_ARCH=false
+              if [ "$DATE" == "$LATEST_ARCH_DATE" ]; then
+                IS_LATEST_ARCH=true
+              fi
+              
+              if [ "$MISSING" == "true" ]; then
+                INCLUDES+=("{\"arch\":\"${ARCH}\",\"date\":\"${DATE}\",\"suite\":\"${SUITE}\",\"is_latest_arch\":${IS_LATEST_ARCH},\"is_latest_suite\":${IS_LATEST_SUITE}}")
+              fi
+            done
+            unset SEEN_SUITES
+          done
+          MATRIX_JSON=$(printf '%s,' "${INCLUDES[@]}")
+          echo "matrix={\"include\":[${MATRIX_JSON%,}]}" >> "${GITHUB_OUTPUT}"
+  build:
+    needs: discover
+    if: needs.discover.outputs.matrix != '{"include":[]}'
+    strategy:
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    uses: ./.github/workflows/build-push.yml
+    with:
+      arch: ${{ matrix.arch }}
+      date: ${{ matrix.date }}
+      suite: ${{ matrix.suite }}
+      is_latest_arch: ${{ matrix.is_latest_arch }}
+      is_latest_suite: ${{ matrix.is_latest_suite }}
+      push: ${{ github.ref == 'refs/heads/master' }}
+    secrets: inherit
