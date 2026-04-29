@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Discover Raspberry Pi OS Lite releases
         run: |
-          curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${{matrix.arch}}/images/" | grep -oP "(?<=href=\\\"raspios_lite_${{matrix.arch}}-\\\")\\d{4}-\\d{2}-\\d{2}(?=/\\\"")" | sort
+          curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${{matrix.arch}}/images/" | grep -oP '(?<=href="raspios_lite_${{matrix.arch}}-)\d{4}-\d{2}-\d{2}(?=/")' | sort
     strategy:
       matrix:
         include:
