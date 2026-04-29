@@ -1,0 +1,30 @@
+---
+name: Discover Raspberry Pi OS releases
+on:
+  push:
+    paths:
+      - Dockerfile
+      - .github/workflows/discover.yml
+  pull_request:
+    paths:
+      - Dockerfile
+      - .github/workflows/discover.yml
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discover Raspberry Pi OS Lite releases
+        run: |
+          curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${{matrix.arch}}/images/" | grep -oP "(?<=href=\\\"raspios_lite_${{matrix.arch}}-\\\")\\d{4}-\\d{2}-\\d{2}(?=/\\\"")" | sort
+    strategy:
+      matrix:
+        include:
+          - arch: arm64
+            platforms: linux/arm64
+          - arch: armhf
+            platforms: linux/arm/v6,linux/arm/v7,linux/arm64

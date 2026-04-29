@@ -30,21 +30,24 @@ jobs:
           set -eo pipefail
           INCLUDES=()
           for ARCH in arm64 armhf; do
-            ALL_DATES=($(curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/" | grep -oP "(?<=href=\"raspios_lite_${ARCH}-)\d{4}-\d{2}-\d{2}(?=/)" | sort))
+            ALL_DATES=($(curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/" | grep -oP "(?<=href=\"raspios_lite_${ARCH}-)\d{4}-\d{2}-\d{2}(?=/)" | sort || true))
+            if [ ${#ALL_DATES[@]} -eq 0 ]; then
+              continue
+            fi
             LATEST_ARCH_DATE="${ALL_DATES[${#ALL_DATES[@]}-1]}"
             
             declare -A SEEN_SUITES
             for (( i=${#ALL_DATES[@]}-1; i>=0; i-- )); do
               DATE="${ALL_DATES[$i]}"
               
+              SUITE=$(curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/raspios_lite_${ARCH}-${DATE}/" | \
+                grep -oP "(?<=${DATE}-raspios-)[a-z]+(?=-${ARCH}-lite\.img\.xz)" | head -1 || true)
+              [ -z "$SUITE" ] && continue
+              
               MISSING=false
-              if ! curl -fsSo /dev/null "https://hub.docker.com/v2/repositories/${DOCKERHUB_USERNAME}/raspios/tags/${ARCH}-${DATE}/"; then
+              if ! curl -fsSo /dev/null "https://hub.docker.com/v2/repositories/${DOCKERHUB_USERNAME}/raspios/tags/${ARCH}-${SUITE}-${DATE}/"; then
                 MISSING=true
               fi
-              
-              SUITE=$(curl -fsSL "https://downloads.raspberrypi.com/raspios_lite_${ARCH}/images/raspios_lite_${ARCH}-${DATE}/" | \
-                grep -oP "(?<=${DATE}-raspios-)[a-z]+(?=-${ARCH}-lite\.img\.xz)" | head -1)
-              [ -z "$SUITE" ] && continue
               
               IS_LATEST_SUITE=false
               if [ -z "${SEEN_SUITES[$SUITE]}" ]; then
