@@ -3,17 +3,21 @@ FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:8f0c555de6a2f9c2bda1b17
 ARG RASPIOS_URL
 ARG RASPIOS_SHA256
 
-ADD --checksum=sha256:${RASPIOS_SHA256} ${RASPIOS_URL} raspios.img.xz
+ADD --checksum=sha256:${RASPIOS_SHA256} ${RASPIOS_URL} raspios.download
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LIBGUESTFS_BACKEND=direct
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libguestfs-tools \
+    unzip \
     xz-utils \
     "linux-image-$(dpkg --print-architecture)"
 
-RUN unxz raspios.img.xz && \
+RUN case "${RASPIOS_URL}" in \
+      *.zip)    unzip -p raspios.download > raspios.img ;; \
+      *.img.xz) unxz -c raspios.download > raspios.img ;; \
+    esac && \
     guestfish --ro -a raspios.img -m /dev/sda2 \
     -- set-autosync false : copy-out / /mnt/
 

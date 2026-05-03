@@ -5,24 +5,41 @@ on:
     paths:
       - 'Dockerfile'
       - '.github/workflows/docker.yml'
+      - 'setup.sh'
   pull_request:
     paths:
       - 'Dockerfile'
       - '.github/workflows/docker.yml'
+      - 'setup.sh'
   workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1'
 permissions:
   contents: read
 jobs:
-  docker:
+  setup:
     runs-on: ubuntu-latest
-    env:
-      DATE: "2025-12-04"
-      SUITE: "trixie"
+    outputs:
+      matrix: ${{ steps.setup.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Run setup
+        id: setup
+        env:
+          DOCKERHUB_REPO: ${{ vars.DOCKERHUB_USERNAME }}/raspios
+        run: echo "matrix=$(./setup.sh)" >> "${GITHUB_OUTPUT}"
+  docker:
+    needs: setup
+    if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Login to Docker Hub
-        if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -31,30 +48,12 @@ jobs:
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-      - name: Prepare build variables
-        id: prep_vars
-        env:
-          URL: https://downloads.raspberrypi.com/raspios_lite_${{ matrix.arch }}/images/raspios_lite_${{ matrix.arch }}-${{ env.DATE }}/${{ env.DATE }}-raspios-${{ env.SUITE }}-${{ matrix.arch }}-lite.img.xz
-        run: |
-          echo "sha256=$(curl -sS "${URL}.sha256" | awk '{print $1}')" >> $GITHUB_OUTPUT
-          echo "url=${URL}" >> $GITHUB_OUTPUT
-          echo "date=${DATE//-/}" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          push: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
-          tags: |
-            ${{ format('{0}/raspios:{1}', vars.DOCKERHUB_USERNAME, matrix.arch) }}
-            ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/raspios:{1}-{2}', vars.DOCKERHUB_USERNAME, matrix.arch, steps.prep_vars.outputs.date) || '' }}
-            ${{ matrix.arch == 'arm64' && format('{0}/raspios:latest', vars.DOCKERHUB_USERNAME) || '' }}
+          push: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          tags: ${{ matrix.tags }}
           platforms: ${{ matrix.platforms }}
           build-args: |
-            RASPIOS_URL=${{ steps.prep_vars.outputs.url }}
-            RASPIOS_SHA256=${{ steps.prep_vars.outputs.sha256 }}
-    strategy:
-      matrix:
-        include:
-          - arch: arm64
-            platforms: linux/arm64
-          - arch: armhf
-            platforms: linux/arm/v6,linux/arm/v7,linux/arm64
+            RASPIOS_URL=${{ matrix.raspios_url }}
+            RASPIOS_SHA256=${{ matrix.raspios_sha256 }}
