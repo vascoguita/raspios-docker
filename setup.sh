@@ -40,9 +40,9 @@ for arch in "${!PLATFORMS[@]}"; do
       SEEN_SUITE["${arch}-${suite}"]=1
     }
 
-    tags=$(echo "${tags#,}" | sed "s|[^,]*|${DOCKERHUB_REPO}:&|g")
+    [[ -z "${tags#,}" ]] && continue
 
-    [[ -z "$tags" ]] && continue
+    tags=$(echo "${tags#,}" | sed "s|[^,]*|${DOCKERHUB_REPO}:&|g")
 
     raspios_sha256=$(curl -fsSL "${raspios_url}.sha256" | awk '{print $1}')
 
