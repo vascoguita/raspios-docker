@@ -5,12 +5,12 @@ on:
     paths:
       - 'Dockerfile'
       - '.github/workflows/docker.yml'
-      - 'setup.sh'
+      - '.github/scripts/matrix.sh'
   pull_request:
     paths:
       - 'Dockerfile'
       - '.github/workflows/docker.yml'
-      - 'setup.sh'
+      - '.github/scripts/matrix.sh'
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * 1'
@@ -28,7 +28,7 @@ jobs:
         id: setup
         env:
           DOCKERHUB_REPO: ${{ vars.DOCKERHUB_USERNAME }}/raspios
-        run: echo "matrix=$(./setup.sh)" >> "${GITHUB_OUTPUT}"
+        run: echo "matrix=$(.github/scripts/matrix.sh)" >> "${GITHUB_OUTPUT}"
   docker:
     needs: setup
     if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
