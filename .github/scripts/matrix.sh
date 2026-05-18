@@ -29,6 +29,12 @@ for arch in "${!PLATFORMS[@]}"; do
     curl -fsSLI "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/${arch}-${suite}-${date}/" \
       >/dev/null 2>&1 || tags="${arch}-${suite}-${date}"
 
+    [[ -z "$tags" && "${GITHUB_EVENT_NAME:-}" == "schedule" ]] && {
+      SEEN_ARCH[$arch]=1
+      SEEN_SUITE["${arch}-${suite}"]=1
+      continue
+    }
+
     [[ -z "${SEEN_ARCH[$arch]:-}" ]] && {
       [[ "$arch" == "arm64" ]] && tags="${tags},arm64,latest" || tags="${tags},armhf"
       SEEN_ARCH[$arch]=1
