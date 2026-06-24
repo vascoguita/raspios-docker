@@ -10,47 +10,79 @@ declare -A PLATFORMS=(
 
 declare -A SEEN_ARCH SEEN_SUITE
 
+die() { echo "matrix.sh: $1" >&2; exit 1; }
+fetch() { curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 15 "$@"; }
+add_tag() { tags="${tags:+$tags,}${DOCKERHUB_REPO}:$1"; }
+
+tag_published() {
+  local code
+  code=$(curl -sSL -I -o /dev/null -w '%{http_code}' \
+    --retry 3 --retry-delay 2 --connect-timeout 15 "$1" || true)
+  case "$code" in
+    200) return 0 ;;
+    404) return 1 ;;
+    *) die "unexpected HTTP ${code} for $1" ;;
+  esac
+}
+
+[[ "${DOCKERHUB_REPO:-}" =~ ^[^/]+/[^/]+$ ]] ||
+  die "DOCKERHUB_REPO must be set to <user>/<repo>, got '${DOCKERHUB_REPO:-}'"
+
 for arch in "${!PLATFORMS[@]}"; do
   name="raspios_lite_${arch}"
-  dates=$(curl -fsSL "${BASE_URL}/${name}/images/" \
+
+  readarray -t dates < <(fetch "${BASE_URL}/${name}/images/" \
     | grep -oP "${name}-\K\d{4}-\d{2}-\d{2}" \
     | sort -ru)
 
-  for date in $dates; do
+  [[ ${#dates[@]} -eq 0 ]] && die "no dated images found for ${name}"
+
+  for date in "${dates[@]}"; do
     dir_url="${BASE_URL}/${name}/images/${name}-${date}"
-    release_file=$(curl -fsSL "${dir_url}/" \
-      | grep -oP '[^"]+\.(?:zip|img\.xz)(?=")' \
-      | head -n 1)
+
+    release_file=$(fetch "${dir_url}/" \
+      | grep -m1 -oP '[^"/]+\.(?:zip|img\.xz)(?=")') ||
+      die "no release image found under ${dir_url}/"
 
     raspios_url="${dir_url}/${release_file}"
-    suite=$(echo "$release_file" | grep -oP 'raspios-\K[a-z]+')
+
+    suite=$(echo "$release_file" | grep -oP 'raspios-\K[a-z]+') ||
+      die "could not parse suite from ${release_file}"
+
     tags=""
 
-    curl -fsSLI "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/${arch}-${suite}-${date}/" \
-      >/dev/null 2>&1 || tags="${arch}-${suite}-${date}"
+    tag_url="https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/${arch}-${suite}-${date}/"
+    tag_published "$tag_url" || add_tag "${arch}-${suite}-${date}"
 
-    [[ -z "$tags" && "${GITHUB_EVENT_NAME:-}" == "schedule" ]] && {
+    if [[ -z "$tags" && "${GITHUB_EVENT_NAME:-}" == "schedule" ]]; then
       SEEN_ARCH[$arch]=1
       SEEN_SUITE["${arch}-${suite}"]=1
       continue
-    }
+    fi
 
-    [[ -z "${SEEN_ARCH[$arch]:-}" ]] && {
-      [[ "$arch" == "arm64" ]] && tags="${tags},arm64,latest" || tags="${tags},armhf"
+    if [[ -z "${SEEN_ARCH[$arch]:-}" ]]; then
+      if [[ "$arch" == "arm64" ]]; then
+        add_tag arm64
+        add_tag latest
+      else
+        add_tag armhf
+      fi
       SEEN_ARCH[$arch]=1
-    }
+    fi
 
-    [[ -z "${SEEN_SUITE[${arch}-${suite}]:-}" ]] && {
-      tags="${tags},${arch}-${suite}"
-      [[ "$arch" == "arm64" ]] && tags="${tags},${suite}"
+    if [[ -z "${SEEN_SUITE[${arch}-${suite}]:-}" ]]; then
+      add_tag "${arch}-${suite}"
+      [[ "$arch" == "arm64" ]] && add_tag "${suite}"
       SEEN_SUITE["${arch}-${suite}"]=1
-    }
+    fi
 
-    [[ -z "${tags#,}" ]] && continue
+    [[ -z "$tags" ]] && continue
 
-    tags=$(echo "${tags#,}" | sed "s|[^,]*|${DOCKERHUB_REPO}:&|g")
+    raspios_sha256=$(fetch "${raspios_url}.sha256" | awk '{print $1}') ||
+      die "could not fetch checksum from ${raspios_url}.sha256"
 
-    raspios_sha256=$(curl -fsSL "${raspios_url}.sha256" | awk '{print $1}')
+    [[ "$raspios_sha256" =~ ^[0-9a-f]{64}$ ]] ||
+      die "invalid checksum for ${raspios_url}"
 
     jq -n -c \
       --arg platforms "${PLATFORMS[$arch]}" \
