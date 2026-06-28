@@ -86,9 +86,11 @@ for arch in "${!PLATFORMS[@]}"; do
 
     jq -n -c \
       --arg platforms "${PLATFORMS[$arch]}" \
+      --arg test_platform "${PLATFORMS[$arch]%%,*}" \
       --arg raspios_url "$raspios_url" \
       --arg raspios_sha256 "$raspios_sha256" \
       --arg tags "$tags" \
-      '{platforms: $platforms, raspios_url: $raspios_url, raspios_sha256: $raspios_sha256, tags: $tags}'
+      --arg test_tag "${tags%%,*}" \
+      '{platforms: $platforms, test_platform: $test_platform, raspios_url: $raspios_url, raspios_sha256: $raspios_sha256, tags: $tags, test_tag: $test_tag}'
   done
 done | jq -sc '{include: .}'
