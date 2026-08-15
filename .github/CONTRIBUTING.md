@@ -2,7 +2,7 @@
 
 Thank you for considering contributing to
 [raspios-docker](https://github.com/vascoguita/raspios-docker). We appreciate
-your time and effort in helping us improve and maintain our website. To ensure
+your time and effort in helping us improve and maintain this project. To ensure
 a smooth and collaborative process, please follow the guidelines outlined
 below.
 
